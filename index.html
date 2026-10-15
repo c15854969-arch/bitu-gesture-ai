@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#02090d">
+  <meta name="description" content="BITU Gesture AI v2.0 — local, camera-based hand gesture control demo powered by MediaPipe.">
+  <title>BITU Gesture AI v2.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@300;400;500;600;700&amp;family=Share+Tech+Mono&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="particle-field" aria-hidden="true"></canvas>
+  <div class="grid-plane" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="BITU Gesture AI home">
+        <span class="brand-mark"><i></i><i></i><i></i></span>
+        <span><strong>BITU</strong><small>GESTURE AI</small></span>
+      </a>
+      <div class="system-meta">
+        <span id="clock">00:00:00 UTC</span>
+        <span class="security">LOCAL VISION // PRIVATE</span>
+      </div>
+      <div class="network-pill"><span></span><b id="engine-status">ENGINE BOOTING</b></div>
+    </header>
+
+    <main>
+      <section class="hero-copy" aria-labelledby="main-title">
+        <div class="eyebrow"><span>NEURAL INTERFACE</span><i></i><small>v2.0</small></div>
+        <h1 id="main-title">CONTROL AT<br><em>YOUR FINGERTIPS.</em></h1>
+        <p>Camera-native gesture intelligence. No wearables. No uploads. Just motion, translated locally into command.</p>
+      </section>
+
+      <section class="scanner-stage" aria-label="Gesture scanner">
+        <div class="scanner-frame" id="scanner-frame">
+          <div class="corner tl"></div><div class="corner tr"></div>
+          <div class="corner bl"></div><div class="corner br"></div>
+          <div class="frame-index">CAM_01 // FRONT</div>
+          <div class="fps-readout"><span id="fps">--</span> FPS</div>
+
+          <div class="media-layer">
+            <video id="webcam" autoplay muted playsinline></video>
+            <canvas id="landmark-canvas"></canvas>
+            <div class="camera-placeholder" id="camera-placeholder">
+              <div class="scanner-orbit" id="scanner-orbit">
+                <span class="orbit o1"></span><span class="orbit o2"></span><span class="orbit o3"></span>
+                <span class="orbit-tick t1"></span><span class="orbit-tick t2"></span><span class="orbit-tick t3"></span><span class="orbit-tick t4"></span>
+                <div class="core-hand" aria-hidden="true">
+                  <svg viewBox="0 0 180 220" fill="none">
+                    <path d="M70 120V53c0-8 5-14 12-14s12 6 12 14v52-74c0-8 5-14 12-14s12 6 12 14v74-58c0-8 5-14 12-14s12 6 12 14v66-42c0-8 5-14 12-14s12 6 12 14v79c0 34-24 57-56 57H95c-19 0-34-9-45-25l-28-43c-5-8-3-17 4-22 7-4 15-2 21 4l23 25" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="70" cy="120" r="4" fill="currentColor"/><circle cx="94" cy="105" r="4" fill="currentColor"/><circle cx="118" cy="105" r="4" fill="currentColor"/><circle cx="142" cy="113" r="4" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="orbit-label l1">TRACK</div><div class="orbit-label l2">21 PTS</div>
+              </div>
+              <div class="placeholder-copy">
+                <strong id="placeholder-title">SCANNER STANDBY</strong>
+                <span id="placeholder-subtitle">Press start to authorize camera access</span>
+              </div>
+            </div>
+            <div class="scan-line"></div>
+            <div class="paused-overlay" id="paused-overlay"><span>VISUAL MATRIX PAUSED</span></div>
+            <div class="loading-overlay" id="loading-overlay" aria-live="polite">
+              <span class="loader-ring"></span><strong id="loading-text">LOADING VISION CORE</strong>
+            </div>
+          </div>
+
+          <div class="detection-strip">
+            <div><span>GESTURE</span><strong id="gesture-output">NO SIGNAL</strong></div>
+            <div><span>CONFIDENCE</span><strong id="confidence-output">—</strong></div>
+            <div class="stability"><span>STABILITY</span><i><b id="stability-bar"></b></i></div>
+          </div>
+        </div>
+
+        <div class="controls" role="group" aria-label="Scanner controls">
+          <button class="control primary" id="start-btn"><i></i><span>START SCANNER</span></button>
+          <button class="control" id="stop-btn" disabled><span>STOP</span></button>
+          <button class="control square" id="reset-btn" aria-label="Reset scanner"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg></button>
+        </div>
+        <button class="demo-entry" id="demo-toggle"><span class="demo-dot"></span><b>CAMERA-FREE DEMO MODE</b><small>SIMULATE GESTURES</small></button>
+        <div class="utility-row" role="group" aria-label="Extra controls">
+          <button class="utility-btn" id="settings-toggle" aria-expanded="false" aria-controls="settings-panel">⚙ SETTINGS</button>
+          <button class="utility-btn" id="fullscreen-btn">⛶ FULL SCREEN</button>
+        </div>
+        <section class="settings-panel" id="settings-panel" aria-hidden="true" aria-labelledby="settings-title">
+          <div class="settings-head"><div><small>LOCAL CONFIGURATION</small><h2 id="settings-title">SCANNER SETTINGS</h2></div><button id="close-settings" aria-label="Close settings">×</button></div>
+          <label class="setting-range" for="stability-setting"><span>GESTURE STABILITY</span><output id="stability-value" for="stability-setting">650 ms</output></label>
+          <input id="stability-setting" type="range" min="300" max="1500" step="50" value="650">
+          <p class="setting-help">Longer stability can reduce accidental triggers but may feel slower.</p>
+          <label class="setting-range" for="cooldown-setting"><span>COMMAND COOLDOWN</span><output id="cooldown-value" for="cooldown-setting">900 ms</output></label>
+          <input id="cooldown-setting" type="range" min="400" max="2500" step="100" value="900">
+          <p class="setting-help">Minimum gap between camera-triggered commands.</p>
+          <div class="enabled-heading">ENABLED GESTURES <small>Switch any gesture off to ignore its command</small></div>
+          <div class="gesture-switches">
+            <label><input type="checkbox" data-gesture-toggle="Open_Palm" checked><span>✋ OPEN PALM</span></label>
+            <label><input type="checkbox" data-gesture-toggle="Closed_Fist" checked><span>✊ CLOSED FIST</span></label>
+            <label><input type="checkbox" data-gesture-toggle="Pointing_Up" checked><span>☝ POINTING UP</span></label>
+            <label><input type="checkbox" data-gesture-toggle="Victory" checked><span>✌ VICTORY</span></label>
+            <label><input type="checkbox" data-gesture-toggle="Thumb_Up" checked><span>▲ THUMB UP</span></label>
+          </div>
+          <button class="settings-reset" id="settings-reset">RESTORE DEFAULT SETTINGS</button>
+        </section>
+      </section>
+
+      <aside class="telemetry" aria-label="System telemetry">
+        <div class="hud-card status-card">
+          <div class="card-heading"><span>SYSTEM STATUS</span><i>01</i></div>
+          <div class="status-orb"><span id="status-orb-text">IDLE</span></div>
+          <dl>
+            <div><dt>HAND TRACKING</dt><dd id="tracking-status" data-state="idle">OFFLINE</dd></div>
+            <div><dt>VISION ENGINE</dt><dd id="vision-status">LOADING</dd></div>
+            <div><dt>PROCESSING</dt><dd>ON-DEVICE</dd></div>
+          </dl>
+        </div>
+        <div class="hud-card recognized-card">
+          <div class="card-heading"><span>LAST COMMAND</span><i>02</i></div>
+          <div class="command-glyph" id="command-glyph">◇</div>
+          <strong id="command-output">AWAITING INPUT</strong>
+          <small id="command-time">NO COMMANDS LOGGED</small>
+        </div>
+      </aside>
+
+      <section class="dashboard" aria-labelledby="dashboard-title">
+        <div class="section-label"><span id="dashboard-title">CONTROL MATRIX</span><small>VICTORY TO CYCLE • POINT TO SELECT</small></div>
+        <div class="panel-deck" id="panel-deck">
+          <article class="matrix-panel highlighted" data-panel="ORBITAL MAP" tabindex="0">
+            <div class="panel-num">01</div><div class="mini-radar"><i></i><b></b><span></span></div>
+            <div><small>NAVIGATION</small><h2>ORBITAL MAP</h2><p>Spatial telemetry and target visualization.</p></div>
+            <span class="panel-state">HIGHLIGHTED</span>
+          </article>
+          <article class="matrix-panel" data-panel="ENERGY CORE" tabindex="0">
+            <div class="panel-num">02</div><div class="power-bars"><i></i><i></i><i></i><i></i><i></i></div>
+            <div><small>POWER SYSTEM</small><h2>ENERGY CORE</h2><p>Simulated resource distribution matrix.</p></div>
+            <span class="panel-state">STANDBY</span>
+          </article>
+          <article class="matrix-panel" data-panel="SIGNAL ARRAY" tabindex="0">
+            <div class="panel-num">03</div><div class="wave-form"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div><small>COMMS LINK</small><h2>SIGNAL ARRAY</h2><p>Local interface connection diagnostics.</p></div>
+            <span class="panel-state">STANDBY</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <div class="gesture-guide hud-card">
+          <div class="card-heading"><span>GESTURE PROTOCOL</span><i>05 TYPES</i></div>
+          <div class="gesture-list">
+            <div><span class="gesture-icon">✋</span><b>OPEN PALM</b><small>SCAN ACTIVE</small></div>
+            <div><span class="gesture-icon">✊</span><b>CLOSED FIST</b><small>PAUSE MATRIX</small></div>
+            <div><span class="gesture-icon">☝</span><b>POINTING UP</b><small>SELECT PANEL</small></div>
+            <div><span class="gesture-icon">✌</span><b>VICTORY</b><small>NEXT PANEL</small></div>
+            <div><span class="gesture-icon">▲</span><b>THUMB UP</b><small>ACCEPT</small></div>
+          </div>
+        </div>
+        <div class="history hud-card">
+          <div class="card-heading"><span>COMMAND HISTORY</span><button id="clear-history">CLEAR</button></div>
+          <ol id="history-list"><li class="empty"><span>00:00:00</span><b>NO COMMANDS DETECTED</b></li></ol>
+        </div>
+      </section>
+
+      <section class="demo-panel" id="demo-panel" aria-hidden="true">
+        <div class="demo-panel-head"><div><small>TRAINING ENVIRONMENT</small><h2>CAMERA-FREE DEMO</h2></div><button id="close-demo" aria-label="Close demo">×</button></div>
+        <p>This simulator demonstrates the interface actions only. It does not claim to detect your hand or use the camera.</p>
+        <div class="demo-gestures">
+          <button data-demo-gesture="Open_Palm"><span>✋</span><b>OPEN PALM</b></button>
+          <button data-demo-gesture="Closed_Fist"><span>✊</span><b>CLOSED FIST</b></button>
+          <button data-demo-gesture="Pointing_Up"><span>☝</span><b>POINTING UP</b></button>
+          <button data-demo-gesture="Victory"><span>✌</span><b>VICTORY</b></button>
+          <button data-demo-gesture="Thumb_Up"><span>▲</span><b>THUMB UP</b></button>
+        </div>
+        <div class="demo-disclosure"><span></span>SIMULATION MODE — NO CAMERA INPUT</div>
+      </section>
+
+      <section class="privacy-note">
+        <svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        <div><strong>PRIVACY BY ARCHITECTURE</strong><span>Camera frames are processed locally in this browser. BITU does not upload, record, or store footage.</span></div>
+        <b>SAFE SCREEN DEMO // NO DEVICE CONTROL</b>
+      </section>
+    </main>
+
+    <footer><span>BITU GESTURE AI</span><i></i><span>MEDIAPIPE VISION</span><i></i><span>LOCAL PROCESSING</span></footer>
+  </div>
+
+  <div class="toast-region" id="toast-region" aria-live="assertive"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
